@@ -1,0 +1,57 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isOperator() {
+      return isAuthenticated() && 
+             (firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'operator' ||
+              isAdmin());
+    }
+    
+    // Alert attachments (images, PDFs, etc.)
+    match /alert_attachments/{alertId}/{fileName} {
+      allow read: if isOperator();
+      allow write: if isOperator() && 
+                    request.resource.size < 10 * 1024 * 1024 && // Max 10MB
+                    request.resource.contentType.matches('image/.*|application/pdf');
+    }
+    
+    // System reports and exports
+    match /reports/{reportId}/{fileName} {
+      allow read: if isOperator();
+      allow write: if isOperator() &&
+                    request.resource.size < 50 * 1024 * 1024; // Max 50MB
+    }
+    
+    // User profile images
+    match /user_profiles/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                    request.auth.uid == userId &&
+                    request.resource.size < 5 * 1024 * 1024 && // Max 5MB
+                    request.resource.contentType.matches('image/.*');
+    }
+    
+    // Backup files - admin only
+    match /backups/{backupId}/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Public assets (logos, documentation)
+    match /public/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

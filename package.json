@@ -1,0 +1,31 @@
+{
+  "name": "scada-firebase-tools",
+  "version": "1.0.0",
+  "description": "Firebase cloud sync tools for SCADA Alarm Client",
+  "main": "firebase_import.js",
+  "scripts": {
+    "seed": "node firebase_import.js",
+    "sync": "node firebase_cloud_sync_service.js",
+    "deploy": "firebase deploy",
+    "deploy:rules": "firebase deploy --only firestore:rules,storage",
+    "deploy:indexes": "firebase deploy --only firestore:indexes",
+    "serve": "firebase emulators:start",
+    "test": "firebase emulators:exec --only firestore 'npm run seed'"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
+  },
+  "keywords": [
+    "firebase",
+    "scada",
+    "industrial",
+    "iot",
+    "cloud-sync"
+  ],
+  "author": "Industrial SCADA Team",
+  "license": "MIT"
+}
